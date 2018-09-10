@@ -73,7 +73,7 @@ By updating the IL Code from the original DLL, the SqlServer PowerShell module d
 
 There is 2 solutions for this:
 - Update by yourself the IL code, and while saving the modified DLL Reflexil will prompt to "Register it for verification skipping" :<br />
-![](assets\reflexil_verification_skipping.png)
+![](assets/reflexil_verification_skipping.png)
 
 - Use the already patched [System.Management.SQLServer.Management.dll](bin/Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll), and register the assembly to bypass Strong Name checking (using the sn.exe utility of the .NET SDK). The sn.exe utility is provided with the .NET Framework. Check a path like this one, depending the version of the .NET Framework installed "C:\Program Files (x86)\Microsoft SDKs\Windows\v8.1A\bin\NETFX 4.5.1 Tools".<br />
 Below are the following commands to:
