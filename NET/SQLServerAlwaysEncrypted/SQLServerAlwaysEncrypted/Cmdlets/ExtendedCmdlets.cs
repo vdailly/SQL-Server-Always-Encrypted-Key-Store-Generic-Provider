@@ -48,6 +48,9 @@ namespace SQLServerAlwaysEncrypted.Cmdlets
             {
                 sqlColumnCustomProviders.Add(providerName, Provider);
             }
+
+            //write back the dictionnary to field
+            SqlConnectionExtension.SetCustomKeyStoreProvider(sqlColumnCustomProviders);
         }
     }
 
