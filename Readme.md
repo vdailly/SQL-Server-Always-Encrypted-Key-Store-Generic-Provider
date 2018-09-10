@@ -76,7 +76,6 @@ All the detailed commands and steps are described [link?](http://link)
     3. <span style="color:red;">The client does not have any knowledge of the MSSQL_Certificate_Store. It cannot access the key to decrypt values. Whatever you provide in your connectionstring the use of a JAVA_Key_Store, path to the file, and password</span> (exemple: jdbc:sqlserver://server:1433;databaseName=CLINIC;user=admin;password=P@ssw0rd";columnEncryptionSetting=Enabled;keyStoreAuthentication=JavaKeyStorePassword;keyStoreLocation=$HOME/CLINIC-CMK.pfx;keyStoreSecret=SecretP@ssw0rd");)
 
 
-
 ## Security Concerns
 
 From my opinion there is no real reasons for the CMK metadata to store both the provider and key path. It should be the client responsability to provide the right key store and key path.
@@ -92,14 +91,17 @@ From the last two sentences, using the AzureKeyVault provider seems a bit more s
 
 Using the provided documentation, its possible to create a generic key store wrapping an underlying real keystore. This solution provide interoperability for clients (Windows/Unix), and do not expose any hint about the path to the CMK.
 
+This solution highlight 2 issues regarding usage of a custom/generic provider. These issues are detailed in:
+- [PS Module unable to retrieve a registered custom provider](Issue1.md)
+- [Already registered custom provider](Issue2.md)
+
 
 This solution provide :
+- a SQL script to setup a demonstration database
 - a SQLColumEncryptionGenericKeyStoreProvider
-- some extended Always Encrypted cmdlets (PowerShell SqlServer module)
-- a patched .dll (with removal of the strong key assembly, use at your own risk)
-- allow loading of unsigned assembly
-- easily bypass some restrictions with Reflection.
-- some low levels information about the current implementation
+- Extended Always Encrypted cmdlets (for the PowerShell SqlServer module) to bypass issue encountered.
+- a patched .dll (with removal of the strong name verification, use at your own risk) to bypass issue encountered.
+- sample to access encrypted data with both .NET Driver and JDBC Driver
 
 
 
@@ -151,6 +153,7 @@ The provided patched DLL use the following code. I replaced the IL code to this 
 
 I used ILSpy + Reflexil to achieve this.
 
+C# :
 ```CSharp
 private static SqlColumnEncryptionKeyStoreProvider GetProvider(string providerName)
 {
@@ -164,6 +167,7 @@ private static SqlColumnEncryptionKeyStoreProvider GetProvider(string providerNa
 }
 ```
 
+IL :
 |Offset	|OpCode	|Operand|
 |-------|-------|-------|
 |0	    |call	|System.Collections.Generic.Dictionary`2<System.String,System.Data.SqlClient.SqlColumnEncryptionKeyStoreProvider> Microsoft.SqlServer.Management.AlwaysEncrypted.Management.AlwaysEncryptedManagement::get_CustomProviders()
@@ -213,128 +217,6 @@ Assembly/Strong Name                  Users
 Microsoft.SqlServer.Management.AlwaysEncrypted.Management,89845DCD8080CC91 AllUsers
 ```
 
-## Already registered custom provider
-
-ILSpy from [System.Data.SqlClient.SqlConnection] class:
-```CSharp
-using Microsoft.SqlServer.Management.AlwaysEncrypted.Types;
-
-public static void RegisterColumnEncryptionKeyStoreProviders(IDictionary<string, SqlColumnEncryptionKeyStoreProvider> customProviders)
-{
-	if (customProviders == null)
-	{
-		throw SQL.NullCustomKeyStoreProviderDictionary();
-	}
-	foreach (string key in customProviders.Keys)
-	{
-		if (string.IsNullOrWhiteSpace(key))
-		{
-			throw SQL.EmptyProviderName();
-		}
-		if (key.StartsWith("MSSQL_", StringComparison.InvariantCultureIgnoreCase))
-		{
-			throw SQL.InvalidCustomKeyStoreProviderName(key, "MSSQL_");
-		}
-		if (customProviders[key] == null)
-		{
-			throw SQL.NullProviderValue(key);
-		}
-	}
-	lock (_CustomColumnEncryptionKeyProvidersLock)
-	{
-		if (_CustomColumnEncryptionKeyStoreProviders != null)
-		{
-			throw SQL.CanOnlyCallOnce();
-		}
-		Dictionary<string, SqlColumnEncryptionKeyStoreProvider> dictionary = new Dictionary<string, SqlColumnEncryptionKeyStoreProvider>(customProviders, StringComparer.OrdinalIgnoreCase);
-		_CustomColumnEncryptionKeyStoreProviders = new ReadOnlyDictionary<string, SqlColumnEncryptionKeyStoreProvider>(dictionary);
-	}
-}
-```
-
-The main issue comes from the latest lines. The code check if the private field "_CustomColumnEncryptionKeyStoreProviders" is null. But the SqlServer PowerShell cmdlets calls:
-1. Microsoft.SqlServer.Management.PSSnapins.dll: [Microsoft.SqlServer.Management.PowerShell.AlwaysEncrypted.*]
-The following code display the New-SqlColumnEncryptionKeyEncryptedValue cmdlet. We see a call to a[Microsoft.SqlServer.Management.AlwaysEncrypted.Types.AlwaysEncryptedManager] object.
-
-```CSharp
-using Microsoft.SqlServer.Management.AlwaysEncrypted.Types;
-
-[Cmdlet("New", "SqlColumnEncryptionKeyEncryptedValue")]
-public class NewSqlColumnEncryptionKeyEncryptedValue : Cmdlet {
-    protected override void ProcessRecord()
-	{
-		...
-        byte[] hex = AlwaysEncryptedManager.CreateEncryptedValue(targetColumnMasterKeySettings.KeyStoreProviderName, targetColumnMasterKeySettings.KeyPath, AddSqlAzureAuthenticationContext.AzureAuthInfo);
-		...
-	}
-}
-```
-
-2. Microsoft.SqlServer.Management.AlwaysEncrypted.Types.dll: [Microsoft.SqlServer.Management.AlwaysEncrypted.Types.AlwaysEncryptedManager]
-
-The [Microsoft.SqlServer.Management.AlwaysEncrypted.Types.AlwaysEncryptedManager] is static and loads with reflection the "Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll" ([the patched dll](bin\Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll)). 
-
-```CSharp
-using System.Reflection;
-public static class AlwaysEncryptedManager {
-
-    private static Type alwaysEncryptedManagement;
-    ...
-
-    ///static constructor
-    static AlwaysEncryptedManager() {
-        assemblylocation = Assembly.GetExecutingAssembly().Location;
-        alwaysEncryptedManagementAssembly = Assembly.LoadFrom(Path.Combine(Path.GetDirectoryName(assemblylocation), "Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll"));
-        alwaysEncryptedManagement = alwaysEncryptedManagementAssembly.GetType("Microsoft.SqlServer.Management.AlwaysEncrypted.Management.AlwaysEncryptedManagement");
-        ...
-    }
-
-    public static byte[] CreateEncryptedValue(string, string, ...) {
-        ...
-        return (byte[])alwaysEncryptedManagement.GetMethod(MethodBase.GetCurrentMethod().Name, types).Invoke(null, parameters);
-    }
-}
-```
-
-
-3. Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll: [Microsoft.SqlServer.Management.AlwaysEncrypted.Types.AlwaysEncryptedManagement]
-
-The [Microsoft.SqlServer.Management.AlwaysEncrypted.Types.AlwaysEncryptedManager] is static. When the "CustomProviders" property is first accessed, the [System.Data.SqlClient.SqlConnection.RegisterColumnEncryptionKeyStoreProviders() method is called. By doing so, the SqlServer PowerShell module lock any further call to register a custom provider.
-
-
-```CSharp
-using System.Data.SqlClient;
-
-public static class AlwaysEncryptedManagement {
-    
-    private static Dictionary<string, SqlColumnEncryptionKeyStoreProvider> customProviders;
-
-    public static Dictionary<string, SqlColumnEncryptionKeyStoreProvider> CustomProviders
-    {
-	get
-	{
-		if (customProviders == null)
-		{
-			customProviders = new Dictionary<string, SqlColumnEncryptionKeyStoreProvider>();
-			customProviders["AZURE_KEY_VAULT"] = new SqlColumnEncryptionAzureKeyVaultProvider(GetAccessToken, new string[4]
-			{
-				"vault.azure.net",
-				"vault.azure.cn",
-				"vault.usgovcloudapi.net",
-				"vault.microsoftazure.de"
-			});
-			try
-			{
-				SqlConnection.RegisterColumnEncryptionKeyStoreProviders(customProviders);
-			}
-			catch (InvalidOperationException)
-			{
-			}
-		}
-		return customProviders;
-	}
-}
-```
 
 
 ## Known Issues
@@ -358,7 +240,7 @@ SELECT [PatientID]
 ```
 
 Output:
-<blockquote style="color:red; size: 8;">
+<blockquote style="color:red;">
 Msg 0, Level 11, State 0, Line 0<br />
 Failed to decrypt column 'SSN'.<br />
 Msg 0, Level 11, State 0, Line 0<br />
