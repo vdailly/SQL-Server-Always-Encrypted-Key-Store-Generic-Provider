@@ -21,14 +21,44 @@ Columns of the database are encrypted with the Column Encryption Key (CEK) using
 
 #### Keys/Certificate Store
 
-Always Encrypted feature comes with some builtin key store
-|Provider Name|Class|Details|
-|-------------|-----|-------|
-|MSSQL_CERTIFICATE_STORE|[SqlColumnEncryptionCertificateStoreProvider](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlcolumnencryptioncertificatestoreprovider?view=netframework-4.7.2)|Represent the Windows Certificate Store|
-|MSSQL_CNG_STORE|[SqlColumnEncryptionCngProvider](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlcolumnencryptioncngprovider?view=netframework-4.7.2)||
-|MSSQL_CSP_PROVIDER|[SqlColumnEncryptionCspProvider](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlcolumnencryptioncspprovider?view=netframework-4.7.2)||
-|MSSQL_JAVA_KEYSTORE|[SQLServerColumnEncryptionJavaKeyStoreProvider](http://static.javadoc.io/com.microsoft.sqlserver/mssql-jdbc/6.1.0.jre7/com/microsoft/sqlserver/jdbc/SQLServerColumnEncryptionJavaKeyStoreProvider.html)|only available with the JDBC Driver|
-|AZURE_KEY_VAULT|[SqlColumnEncryptionAzureKeyVaultProvider](https://www.nuget.org/packages/Microsoft.SqlServer.Management.AlwaysEncrypted.AzureKeyVaultProvider/)|available for both JDBC/.NET Driver but considered as a custom provider, not registered by default|
+Always Encrypted feature comes with some builtin key store described below in following table :
+
+<table>
+    <thead>
+        <tr>
+            <th>Provider Name</th>
+            <th>Class</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>MSSQL_CERTIFICATE_STORE</td>
+            <td><a href="https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlcolumnencryptioncertificatestoreprovider?view=netframework-4.7.2">SqlColumnEncryptionCertificateStoreProvider</a></td>
+            <td>Represent the Windows Certificate Store</td>
+        </tr>
+        <tr>
+            <td>MSSQL_CNG_STORE</td>
+            <td><a href="https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlcolumnencryptioncngprovider?view=netframework-4.7.2">SqlColumnEncryptionCngProvider</a></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>MSSQL_CSP_PROVIDER</td>
+            <td><a href="https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlcolumnencryptioncspprovider?view=netframework-4.7.2">SqlColumnEncryptionCspProvider</a></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td>MSSQL_JAVA_KEYSTORE</td>
+            <td><a href="http://static.javadoc.io/com.microsoft.sqlserver/mssql-jdbc/6.1.0.jre7/com/microsoft/sqlserver/jdbc/SQLServerColumnEncryptionJavaKeyStoreProvider.html">SQLServerColumnEncryptionJavaKeyStoreProvider</a></td>
+            <td>only available with the JDBC Driver</td>
+        </tr>
+        <tr>
+            <td>AZURE_KEY_VAULT</td>
+            <td><a href="https://www.nuget.org/packages/Microsoft.SqlServer.Management.AlwaysEncrypted.AzureKeyVaultProvider/">SqlColumnEncryptionAzureKeyVaultProvider</a></td>
+            <td>available for both JDBC/.NET Driver but considered as a custom provider, not registered by default</td>
+        </tr>
+    </tbody>
+</table>
 
 
 ## Interoperability Issue
