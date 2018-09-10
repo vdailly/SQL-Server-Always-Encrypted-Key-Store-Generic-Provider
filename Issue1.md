@@ -40,7 +40,7 @@ The [provided patched DLL](bin/Microsoft.SqlServer.Management.AlwaysEncrypted.Ma
 
 I used ILSpy + Reflexil to achieve this.
 
-C# :
+- C# :
 ```CSharp
 private static SqlColumnEncryptionKeyStoreProvider GetProvider(string providerName)
 {
@@ -54,15 +54,16 @@ private static SqlColumnEncryptionKeyStoreProvider GetProvider(string providerNa
 }
 ```
 
-IL :
+- IL:
+
 |Offset	|OpCode	|Operand|
 |-------|-------|-------|
-|0	    |call	|System.Collections.Generic.Dictionary`2<System.String,System.Data.SqlClient.SqlColumnEncryptionKeyStoreProvider> Microsoft.SqlServer.Management.AlwaysEncrypted.Management.AlwaysEncryptedManagement::get_CustomProviders()
-|5	    |ldarg.0	
-|6	    |ldloca.s  |-> (0) (System.Data.SqlClient.SqlColumnEncryptionKeyStoreProvider)
-|8	    |callvirt  |System.Boolean System.Collections.Generic.Dictionary`2<System.String,System.Data.SqlClient.SqlColumnEncryptionKeyStoreProvider>::TryGetValue(!0,!1&)
-|13	    |ldloc.0	
-|14	    |ret	
+|0	    |call	|System.Collections.Generic.Dictionary`2<System.String,System.Data.SqlClient.SqlColumnEncryptionKeyStoreProvider> Microsoft.SqlServer.Management.AlwaysEncrypted.Management.AlwaysEncryptedManagement::get_CustomProviders()|
+|5	    |ldarg.0|	|
+|6	    |ldloca.s  |-> (0) (System.Data.SqlClient.SqlColumnEncryptionKeyStoreProvider)|
+|8	    |callvirt  |System.Boolean System.Collections.Generic.Dictionary`2<System.String,System.Data.SqlClient.SqlColumnEncryptionKeyStoreProvider>::TryGetValue(!0,!1&)|
+|13	    |ldloc.0|	|
+|14	    |ret	||
 
 ## Bypass Strong Name checking
 
