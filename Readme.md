@@ -21,18 +21,19 @@ Columns of the database are encrypted with the Column Encryption Key (CEK) using
 
 #### Keys/Certificate Store
 
-Always Encrypted feature comes with some builtin key store:
-1. MSSQLCertificateStore: Represent the Microsoft Windows Certificate Store
-2. CNG ...
-3. TMG ...
-4. JAVAKEYStore: only available with the JDBC Driver.
-5. AZUREKEYVault:
+Always Encrypted feature comes with some builtin key store
+|Provider Name|Class|Details|
+|-------------|-----|-------|
+|MSSQL_CERTIFICATE_STORE|[SqlColumnEncryptionCertificateStoreProvider](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlcolumnencryptioncertificatestoreprovider?view=netframework-4.7.2)|Represent the Windows Certificate Store|
+|MSSQL_CNG_STORE|[SqlColumnEncryptionCngProvider](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlcolumnencryptioncngprovider?view=netframework-4.7.2)||
+|MSSQL_CSP_PROVIDER|[SqlColumnEncryptionCspProvider](https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlcolumnencryptioncspprovider?view=netframework-4.7.2)||
+|MSSQL_JAVA_KEYSTORE|[SQLServerColumnEncryptionJavaKeyStoreProvider](http://static.javadoc.io/com.microsoft.sqlserver/mssql-jdbc/6.1.0.jre7/com/microsoft/sqlserver/jdbc/SQLServerColumnEncryptionJavaKeyStoreProvider.html)|only available with the JDBC Driver|
+|AZURE_KEY_VAULT|[SqlColumnEncryptionAzureKeyVaultProvider](https://www.nuget.org/packages/Microsoft.SqlServer.Management.AlwaysEncrypted.AzureKeyVaultProvider/)|available for both JDBC/.NET Driver but considered as a custom provider, not registered by default|
 
 
 ## Interoperability Issue
 
-The following architecture schema describe in details the behaviour.
-All the detailed commands and steps are described [link?](http://link)
+The following architecture schema describe in details how the SQL Server Always Encrypted feature works. Each arrow is described below in order.
 
 ![architecture](assets/AlwaysEncryptedMetadata.png)
 
@@ -75,6 +76,9 @@ All the detailed commands and steps are described [link?](http://link)
     
     3. <span style="color:red;">The client does not have any knowledge of the MSSQL_Certificate_Store. It cannot access the key to decrypt values. Whatever you provide in your connectionstring the use of a JAVA_Key_Store, path to the file, and password</span> (exemple: jdbc:sqlserver://server:1433;databaseName=CLINIC;user=admin;password=P@ssw0rd";columnEncryptionSetting=Enabled;keyStoreAuthentication=JavaKeyStorePassword;keyStoreLocation=$HOME/CLINIC-CMK.pfx;keyStoreSecret=SecretP@ssw0rd");)
 
+<br />
+<br />
+<br />
 
 ## Security Concerns
 
@@ -86,6 +90,7 @@ If an attacker gain access to a cient able to decrypt the database, the attacker
 
 From the last two sentences, using the AzureKeyVault provider seems a bit more secure, because any client (Windows/Linux) may have access to the web, and it would be probably challenging for an attacker to gain access to the key.
 
+<br />
 
 ## Solution
 
@@ -96,14 +101,14 @@ This solution highlight 2 issues regarding usage of a custom/generic provider. T
 - [Already registered custom provider](Issue2.md)
 
 
-This solution provide :
-- a SQL script to setup a demonstration database
-- a SQLColumEncryptionGenericKeyStoreProvider
-- Extended Always Encrypted cmdlets (for the PowerShell SqlServer module) to bypass issue encountered.
-- a patched .dll (with removal of the strong name verification, use at your own risk) to bypass issue encountered.
+This solution provide in order:
+- [Setup SQL sample database/table](0-SetupSQL.md)
+- a SQLColumEncryptionGenericKeyStoreProvider for both JDBC Driver and [.NET Driver](bin\SQLServerAlwaysEncrypted.dll)
+- [Extended Always Encrypted cmdlets](bin\SQLServerAlwaysEncrypted.dll) (for the PowerShell SqlServer module) to bypass [issue](Issue2.md) encountered.
+- the [patched Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll](bin\Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll) (ensure to bypass strong name verification, use at your own risk) to bypass [issue](Issue1.md) encountered.
 - sample to access encrypted data with both .NET Driver and JDBC Driver
 
-
+<br />
 
 ## Results
 
@@ -120,111 +125,15 @@ This solution provide :
 - Create the generic provider
 - Register the generic provider (Microsoft issue 1)
 
-Initial code from Microsoft
-```CSharp
-private static SqlColumnEncryptionKeyStoreProvider GetProvider(string providerName)
-{
-	switch (providerName)
-	{
-	case "MSSQL_CERTIFICATE_STORE":
-		return new SqlColumnEncryptionCertificateStoreProvider();
-	case "MSSQL_CSP_PROVIDER":
-		return new SqlColumnEncryptionCspProvider();
-	case "MSSQL_CNG_STORE":
-		return new SqlColumnEncryptionCngProvider();
-	case "AZURE_KEY_VAULT":
-	{
-		if (CustomProviders.TryGetValue("AZURE_KEY_VAULT", out SqlColumnEncryptionKeyStoreProvider value))
-		{
-			return value;
-		}
-		string message = string.Format(CultureInfo.CurrentUICulture, ManagementResources.AkvProviderNotRegisteredTemplate, "AZURE_KEY_VAULT");
-		throw new InvalidOperationException(message);
-	}
-	default:
-		throw new InvalidOperationException(string.Format(CultureInfo.CurrentUICulture, ManagementResources.UnsupportedKeyStoreProviderTemplate, providerName));
-	}
-}
-```
-
-The main issue in this code is the default clause. Only an error is returned whenever you attempt to access the generic provider. So it is impossible to achieve Always Encrypted configuration with PowerShell. It is certainly possible with C# or Java, but all the documentation used PowerShell and daily management tasks seems easier.
-
-The provided patched DLL use the following code. I replaced the IL code to this simple sentence. I was not really able to properly insert IL to only replace the default statement. But it doesn't have any importance, being able to retrieve the generic provider is sufficient.
-
-I used ILSpy + Reflexil to achieve this.
-
-C# :
-```CSharp
-private static SqlColumnEncryptionKeyStoreProvider GetProvider(string providerName)
-{
-	if (!CustomProviders.TryGetValue(providerName, out SqlColumnEncryptionKeyStoreProvider value))
-	{
-		goto IL_000f;
-	}
-	goto IL_000f;
-	IL_000f:
-	return value;
-}
-```
-
-IL :
-|Offset	|OpCode	|Operand|
-|-------|-------|-------|
-|0	    |call	|System.Collections.Generic.Dictionary`2<System.String,System.Data.SqlClient.SqlColumnEncryptionKeyStoreProvider> Microsoft.SqlServer.Management.AlwaysEncrypted.Management.AlwaysEncryptedManagement::get_CustomProviders()
-|5	    |ldarg.0	
-|6	    |ldloca.s  |-> (0) (System.Data.SqlClient.SqlColumnEncryptionKeyStoreProvider)
-|8	    |callvirt  |System.Boolean System.Collections.Generic.Dictionary`2<System.String,System.Data.SqlClient.SqlColumnEncryptionKeyStoreProvider>::TryGetValue(!0,!1&)
-|13	    |ldloc.0	
-|14	    |ret	
-
-Allow our patched dll to be loaded. Because the code is now updated, ensure to trust this new dll, by removing the strong name checking. Reflexil do it for us.
-
-If you plan to use directly the provided "System.Management.SQLServer.Management.dll", you have to register this assembly to bypass Strong Name verification. Else the SQLServer Powershell module will not load the dll properly.
-
-
-##### Command
-```Cmd
-rem Find the sn tool in your .NET Framewrok SDK (path may be different on your host).
-cd "C:\Program Files (x86)\Microsoft SDKs\Windows\v8.1A\bin\NETFX 4.5.1 Tools"
-rem Check your CLR policy for Bypass Strong Name verification
-sn -Pb
-rem Enable Bypass Strong Name verification
-sn -Pb y
-rem Register the DLL for strong name verification skipping
-sn -Vr "Microsoft.SqlServer.Management.AlwaysEncrypted.Management,89845DCD8080CC91" AllUsers
-rem Check the DLL registration
-sn -Vl
-```
-
-##### Command Result
-```cmd
-Microsoft (R) .NET Framework Strong Name Utility  Version 4.0.30319.33440
-Copyright (c) Microsoft Corporation.  All rights reserved.
-
-Trusted applications may bypass strong name verification on this machine.
-
-Microsoft (R) .NET Framework Strong Name Utility  Version 4.0.30319.33440
-Copyright (c) Microsoft Corporation.  All rights reserved.
-
-Verification entry added for assembly 'Microsoft.SqlServer.Management.AlwaysEncrypted.Management,89845DCD8080CC91'
-
-
-Microsoft (R) .NET Framework Strong Name Utility  Version 4.0.30319.33440
-Copyright (c) Microsoft Corporation.  All rights reserved.
-
-Assembly/Strong Name                  Users
-===========================================
-Microsoft.SqlServer.Management.AlwaysEncrypted.Management,89845DCD8080CC91 AllUsers
-```
-
-
+<br />
 
 ## Known Issues
 
-- SQL Server Management Studio cannot decrypt columns when setting "Column Encryption Setting=enabled". Or we should access the .NET assemblies loaded by the 'smss' process and register the generic provider into the SqlConnection class loaded by the process. I even don't know if this can be done.
+- SQL Server Management Studio cannot decrypt columns when setting "Column Encryption Setting=enabled". Or we should access the .NET assemblies loaded by the 'smss' process and register the generic provider into the SqlConnection class loaded by the process. I even don't know if this can be done (easily I mean).
 
 ![connectionstring](assets/smss_settings.png)
 
+Using the following script on a table with encrypted columns, the following error happens :
 ```sql
 SELECT [PatientID]
       ,[SSN]

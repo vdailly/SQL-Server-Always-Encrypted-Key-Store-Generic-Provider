@@ -55,6 +55,7 @@ private static SqlColumnEncryptionKeyStoreProvider GetProvider(string providerNa
 ```
 
 - IL:
+<div style="font-size:0.8em">
 
 |Offset	|OpCode	|Operand|
 |-------|-------|-------|
@@ -64,6 +65,7 @@ private static SqlColumnEncryptionKeyStoreProvider GetProvider(string providerNa
 |8	    |callvirt  |System.Boolean System.Collections.Generic.Dictionary`2<System.String,System.Data.SqlClient.SqlColumnEncryptionKeyStoreProvider>::TryGetValue(!0,!1&)|
 |13	    |ldloc.0|	|
 |14	    |ret	||
+</div>
 
 ## Bypass Strong Name checking
 
