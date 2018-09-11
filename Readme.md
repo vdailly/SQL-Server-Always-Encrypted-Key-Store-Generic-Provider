@@ -159,7 +159,7 @@ This solution provide in order:
 
 ## Known Issues
 
-- SQL Server Management Studio cannot decrypt columns when setting "Column Encryption Setting=enabled". Or we should access the .NET assemblies loaded by the 'smss' process and register the generic provider into the SqlConnection class loaded by the process. I even don't know if this can be done (easily I mean).
+- SQL Server Management Studio cannot decrypt columns when setting "Column Encryption Setting=enabled". Or we should access the .NET assemblies loaded by the 'smss' process and register the generic provider into the SqlConnection class loaded by the process. I even don't know if this can be done (easily I mean). Nevertheless, it may be possible to update the IL code of any assembly (remove Strong Name verification for this assembly) loaded by ssms.exe to provide a static constructor (in any existing class) that would load the assembly of the generic provider ([the generic dll](bin\SQLServerAlwaysEncrypted.dll)) and create an instance of this generic provider with the right parameters to access the key, and register it. This would allow ssms.exe to decrypt columns.
 
 ![connectionstring](assets/smss_settings.png)
 
@@ -179,13 +179,12 @@ SELECT [PatientID]
 ```
 
 Output:
-<blockquote style="color:red;">
+```
 Msg 0, Level 11, State 0, Line 0<br />
 Failed to decrypt column 'SSN'.<br />
 Msg 0, Level 11, State 0, Line 0<br />
 Failed to decrypt a column encryption key. Invalid key store provider name: 'GENERIC'...
 ```
-</blockquote>
 
 
 ## Licence

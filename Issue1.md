@@ -30,7 +30,7 @@ public static class AlwaysEncryptedManagement {
 }
 ```
 
-The main issue in this code is the default statement. Only an error is returned whenever you attempt to access a custom provider. Normally the code should behave as in the the "AZURE_KEY_VAULT" statement.
+The main issue in this code is the default statement. Only an error is returned whenever you attempt to access a custom provider. Normally the code should behave as in the "AZURE_KEY_VAULT" statement.
 
 With the original code, it is impossible to achieve Always Encrypted configuration with PowerShell and a custom/generic provider. It may be possible with a full C# or Java, but all the documentation use PowerShell.
 
@@ -54,7 +54,7 @@ private static SqlColumnEncryptionKeyStoreProvider GetProvider(string providerNa
 }
 ```
 
-- IL:
+- IL :
 <div style="font-size:0.8em">
 
 |Offset	|OpCode	|Operand|
@@ -72,13 +72,13 @@ private static SqlColumnEncryptionKeyStoreProvider GetProvider(string providerNa
 By updating the IL Code from the original DLL, the SqlServer PowerShell module doesn't allow anymore you to load this assembly.
 
 There is 2 solutions for this:
-- Update by yourself the IL code, and while saving the modified DLL Reflexil will prompt to "Register it for verification skipping" :<br />
+- Update by yourself the IL code, and while saving the modified DLL Reflexil will prompt you to "Register it for verification skipping" :<br />
 ![](assets/reflexil_verification_skipping.png)
 
 - Use the already patched [System.Management.SQLServer.Management.dll](bin/Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll), and register the assembly to bypass Strong Name checking (using the sn.exe utility of the .NET SDK). The sn.exe utility is provided with the .NET Framework. Check a path like this one, depending the version of the .NET Framework installed "C:\Program Files (x86)\Microsoft SDKs\Windows\v8.1A\bin\NETFX 4.5.1 Tools".<br />
 Below are the following commands to:
   - Enable the CLR policy for bypass Strong Name verification
-  - Register the DLL for bypass Strong Name verification for all users
+  - Register the DLL to bypass Strong Name verification for all users
 
  Commands
 ```Cmd
