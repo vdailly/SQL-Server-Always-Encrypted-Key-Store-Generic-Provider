@@ -141,7 +141,7 @@ This solution provide in order :
 
 4. [Extended Always Encrypted cmdlets](bin/SQLServerAlwaysEncrypted.dll) that allow to bypass [issue](Issue2.md) encountered. These cmdlets are extensions for the Always Encrypted Microsoft cmdlets included in the SqlServer PowerShell module.
 
-5. a SQLColumEncryptionGenericKeyStoreProvider class implementation for both JDBC Driver and the .NET Driver. This <b>generic</b> provider is [compiled in DLL](bin\SQLServerAlwaysEncrypted.dll) for usage in the PowerShell configuration of the SQL Server Always Encrypted feature.
+5. a SQLColumEncryptionGenericKeyStoreProvider class implementation for both JDBC Driver and the .NET Driver. This <b>generic</b> provider is [compiled in DLL](bin/SQLServerAlwaysEncrypted.dll) for usage in the PowerShell configuration of the SQL Server Always Encrypted feature.
 
 6. The [complete documentation](2-CreateGenericCMK-CEK.md) to setup the environment (computer wide, powershell-session wide) and all steps to create, register and use the <b>generic</b> provider, generate the CMK, the CEK and encrypt columns of the table in the database.
 
