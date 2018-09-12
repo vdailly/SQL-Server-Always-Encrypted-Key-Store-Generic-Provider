@@ -5,5 +5,5 @@ Create a new Database with name "CLINIC".
 
 Then use the provided SQL script to create the table content :
 
-- [SQL Table creation](bin\Create_Table_Patients.sql)
+- [SQL Table creation](bin/Create_Table_Patients.sql)
 

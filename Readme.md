@@ -76,7 +76,7 @@ The following architecture schema describe in details how the SQL Server Always 
     2. You store the certificate on the file system as file (.pfx) for the JDBC client.
 
 ##### CMK / CEK / Database Columns Encryption
- 3. To stick on a real production example, you configure Always Encrypted keys provisioning with role separation as described in https://docs.microsoft.com/en-us/sql/relational-databases/security/encryption/configure-always-encrypted-keys-using-powershell?view=sql-server-2017#KeyProvisionWithRoles. All steps are described in this document.
+ 3. To stick on a real production example, you configure Always Encrypted keys provisioning with role separation as described in [Microsoft documentation](https://docs.microsoft.com/en-us/sql/relational-databases/security/encryption/configure-always-encrypted-keys-using-powershell?view=sql-server-2017#KeyProvisionWithRoles). All steps from this documentation are detailed here.
 
     1. The security administrator with access to the certificate private key generate an encrypted value for the CEK.
 
@@ -104,20 +104,18 @@ The following architecture schema describe in details how the SQL Server Always 
 
     2. [supposed] The JDBC Driver read the metadata of the CMK and check if it has access to the provider (MSSQL_Certificate_Store) and key path.
     
-    3. The client does not have any knowledge of the MSSQL_Certificate_Store. It cannot access the key to decrypt values. Whatever you provide in your connectionstring the use of a JAVA_Key_Store, path to the file, and password. example: "jdbc:sqlserver://server:1433;databaseName=CLINIC;user=admin;password=P@ssw0rd";columnEncryptionSetting=Enabled;keyStoreAuthentication=JavaKeyStore;keyStoreLocation=$HOME/CLINIC-CMK.pfx;keyStoreSecret=SecretP@ssw0rd" ). The JavaKeyStore settings are ignored by the driver.
+    3. The client does not have any knowledge of the MSSQL_CERTIFICATE_STORE. It cannot access the key to decrypt values. Whatever you provide in your connectionstring the use of a JAVA_KEY_STORE, path to the file, and password. example: "jdbc:sqlserver://server:1433;databaseName=CLINIC;user=admin;password=P@ssw0rd";columnEncryptionSetting=Enabled;keyStoreAuthentication=JavaKeyStore;keyStoreLocation=$HOME/CLINIC-CMK.pfx;keyStoreSecret=SecretP@ssw0rd" ). The JavaKeyStore settings are ignored by the driver.
 
 
 <br />
 
 ## Security Concerns
 
-From my opinion there is no real reasons for the CMK metadata to store both the provider and key path. It should be the client responsability to provide the right key store and key path.
+From my opinion, I still do not understand the reasons for the CMK to store metadata about the provider and the key path. 
 
-If it is intended to ensure that only one kind of client can decrypt the values, then you probably don't really know to who you gave the certificate. 
+Worst, I find that these metadatas reveals too much information about the key location (store provider and path).
 
-If an attacker gain access to a cient able to decrypt the database, the attacker can. If worst the attacker gain access to the SQL Server, it will probably be very easy to gain access to a client able to decrypt the database. 
-
-From the last two sentences, using the AzureKeyVault provider seems a bit more secure, because any client (Windows/Linux) may have access to the web, and it would be probably challenging for an attacker to gain access to the key.
+The generic provider used here finally from a security point of view reveals nothing about the key location. And it's finally the client responsability to provide the right information to access encrypted columns.
 
 <br />
 
@@ -139,9 +137,9 @@ This solution provide in order :
 
 2. The [generation of the certificate](1-CreateKey.md) used to encrypted columns and deployed to both the JDBC client (as .pfx file for the MSSQL_JAVA_KEYSTORE provider) and the .NET client (as .pfx imported into the Windows Certificate store for the MSSQL_CERTIFICATE_STORE provider). The certificate generation has currently some restrictions detailed in the aformentioned document.
 
-3. the [patched Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll](bin\Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll) (ensure to bypass strong name verification, use at your own risk) to bypass [issue](Issue1.md) encountered.
+3. the [patched Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll](bin/Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll) (ensure to bypass strong name verification, use at your own risk) to bypass [issue](Issue1.md) encountered.
 
-4. [Extended Always Encrypted cmdlets](bin\SQLServerAlwaysEncrypted.dll) that allow to bypass [issue](Issue2.md) encountered. These cmdlets are extensions for the Always Encrypted Microsoft cmdlets included in the SqlServer PowerShell module.
+4. [Extended Always Encrypted cmdlets](bin/SQLServerAlwaysEncrypted.dll) that allow to bypass [issue](Issue2.md) encountered. These cmdlets are extensions for the Always Encrypted Microsoft cmdlets included in the SqlServer PowerShell module.
 
 5. a SQLColumEncryptionGenericKeyStoreProvider class implementation for both JDBC Driver and the .NET Driver. This <b>generic</b> provider is [compiled in DLL](bin\SQLServerAlwaysEncrypted.dll) for usage in the PowerShell configuration of the SQL Server Always Encrypted feature.
 

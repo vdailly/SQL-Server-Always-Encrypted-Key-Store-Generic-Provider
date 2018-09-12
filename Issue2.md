@@ -10,7 +10,7 @@ By following the <a href="#callstack">callstack</a> from the load of the PowerSh
 
 
 
-Hopefully, using [System.Reflection] it is easy to circonvert this issue once figured. The extended Always Encrypted cmdlets provided in [SQLServerAlwaysEncrypted.dll](bin\SQLServerAlwaysEncrypted.dll) allow to easily register any additionnal provider. This is the extended provided cmdlet [Register-SqlColumnEncryptionCustomProvider](NET\src\SQLServerAlwaysEncrypted\SQLServerAlwaysEncrypted\Cmdlets\ExtendedCmdlets.cs) which does ensure to register the generic provider in all Dictionnary<String, SqlColumnEncryptionKeyStoreProvider> whenever found in the detailed callstack below.
+Hopefully, using [System.Reflection] it is easy to circonvert this issue once figured. The extended Always Encrypted cmdlets provided in [SQLServerAlwaysEncrypted.dll](bin/SQLServerAlwaysEncrypted.dll) allow to easily register any additionnal provider. This is the extended provided cmdlet [Register-SqlColumnEncryptionCustomProvider](NET/src/SQLServerAlwaysEncrypted\SQLServerAlwaysEncrypted/Cmdlets/ExtendedCmdlets.cs) which does ensure to register the generic provider in all Dictionnary<String, SqlColumnEncryptionKeyStoreProvider> whenever found in the detailed callstack below.
 
 ## <span id="callstack">Call Stack details</span>
 
@@ -74,7 +74,7 @@ public class NewSqlColumnEncryptionKeyEncryptedValue : Cmdlet {
 
 2. Microsoft.SqlServer.Management.AlwaysEncrypted.Types.dll: [Microsoft.SqlServer.Management.AlwaysEncrypted.Types.AlwaysEncryptedManager]
 
-The [Microsoft.SqlServer.Management.AlwaysEncrypted.Types.AlwaysEncryptedManager] is static and loads with reflection the "Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll" ([the patched dll](bin\Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll)). 
+The [Microsoft.SqlServer.Management.AlwaysEncrypted.Types.AlwaysEncryptedManager] is static and loads with reflection the "Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll" ([the patched dll](bin/Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll)). 
 
 ```CSharp
 using System.Reflection;
