@@ -2,7 +2,7 @@
 
 ## Information about the issue
 
-One of the issue encountered during development of this generic provider was the moment where you want to encrypt columns. The cmdlet used to encrypt the columns does use the [System.Data.SqlClient.SqlConnection] object to get access to registered custom providers.
+One of the issue encountered during development of this generic provider was the moment where you want to encrypt columns. The cmdlet used to encrypt the columns use the [System.Data.SqlClient.SqlConnection] object to get access to registered custom providers.
 
 By following the <a href="#callstack">callstack</a> from the load of the PowerShell module, it is clear that both the PowerShell module and the code from [System.Data.SqlClient] present some issues:
 - The SqlServer PowerShell module loads the "AZURE_KEY_VAULT" as a custom provider and by doing so prevent any other registration of a custom provider.

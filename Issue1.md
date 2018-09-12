@@ -1,4 +1,5 @@
-# PS Module unable to retrieve a registered custom provider
+# SqlServer PowerShell Module unable to find a registered custom provider
+
 
 ## Microsoft Code
 Initial code from the Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll: 
@@ -32,11 +33,13 @@ public static class AlwaysEncryptedManagement {
 
 The main issue in this code is the default statement. Only an error is returned whenever you attempt to access a custom provider. Normally the code should behave as in the "AZURE_KEY_VAULT" statement.
 
-With the original code, it is impossible to achieve Always Encrypted configuration with PowerShell and a custom/generic provider. It may be possible with a full C# or Java, but all the documentation use PowerShell.
+With the original code, it is impossible to achieve Always Encrypted configuration with PowerShell and a custom/generic provider. It may probably be possible with a full C# or Java, but all the documentation used PowerShell.
+
+In an effort to use PowerShell for this scenario, a solution was necessary.
 
 ## Patched DLL
 
-The [provided patched DLL](bin/Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll) replace the Microsoft original code with the following simple code. I was not really able to properly insert IL to replace only the default statement from the original code. But it doesn't have any importance, being able to retrieve a custom/generic provider is sufficient.
+The [provided patched DLL](bin/Microsoft.SqlServer.Management.AlwaysEncrypted.Management.dll) replace the Microsoft original code with the following simple code. I was not really able to properly insert IL code to replace only the default statement from the original code. But it doesn't have any importance, being able to retrieve a custom/generic provider is sufficient.
 
 I used ILSpy + Reflexil to achieve this.
 
