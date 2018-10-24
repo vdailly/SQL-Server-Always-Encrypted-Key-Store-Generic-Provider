@@ -1,6 +1,6 @@
 ## SQL Server Always Encrypted Key Store Generic Provider
 
-This solution provide a workaroud for the SQL Server Always Encrypted feature, for interoperability between clients that do not share any common Key Store Provider. Especially, this is intended for OS interoperability (Windows/Linux) not using Azure (or with no access to Internet).
+This solution provides a workaroud for the SQL Server Always Encrypted feature, for interoperability between clients that do not share any common Key Store Provider. Especially, this is intended for OS interoperability (Windows/Linux) not using Azure (or with no access to Internet).
 
 ## Always Encrypted definitions
 
@@ -21,7 +21,7 @@ Columns of the database are encrypted with the Column Encryption Key (CEK) using
 
 #### Keys/Certificate Store
 
-Always Encrypted feature comes with some builtin key store described below in following table :
+Always Encrypted feature comes with some builtin key stores described below in following table :
 
 <table>
     <thead>
@@ -35,7 +35,7 @@ Always Encrypted feature comes with some builtin key store described below in fo
         <tr>
             <td>MSSQL_CERTIFICATE_STORE</td>
             <td><a href="https://docs.microsoft.com/en-us/dotnet/api/system.data.sqlclient.sqlcolumnencryptioncertificatestoreprovider?view=netframework-4.7.2">SqlColumnEncryptionCertificateStoreProvider</a></td>
-            <td>Represent the Windows Certificate Store</td>
+            <td>Represents the Windows Certificate Store</td>
         </tr>
         <tr>
             <td>MSSQL_CNG_STORE</td>
@@ -113,9 +113,9 @@ The following architecture schema describe in details how the SQL Server Always 
 
 From my opinion, I still do not understand the reasons for the CMK to store metadata about the provider and the key path. 
 
-Worst, I find that these metadatas reveals too much information about the key location (store provider and path).
+Worst, I find that this metadata reveals too much information about the key location (store provider and path).
 
-The generic provider used here finally from a security point of view reveals nothing about the key location. And it's finally the client responsability to provide the right information to access encrypted columns.
+The generic provider used here finally from a security point of view reveals nothing about the key location. And it's finally the client responsibility to provide the right information to access encrypted columns.
 
 <br />
 
